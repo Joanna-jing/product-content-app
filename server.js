@@ -4,7 +4,7 @@ const fetch = require("node-fetch");
 const path = require("path");
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
@@ -17,7 +17,7 @@ app.post("/api/generate", async (req, res) => {
 
   const { system, messages } = req.body;
   const userMessage = messages?.[0]?.content || "";
-  const prompt = system ? `${system}\n\n${userMessage}` : userMessage;
+  const prompt = `${system}\n\n${userMessage}\n\n重要：你的回答必須是純 JSON，不能有任何說明文字、不能有 markdown 的反引號，直接從 { 開始到 } 結束。`;
 
   try {
     const response = await fetch(
@@ -27,12 +27,17 @@ app.post("/api/generate", async (req, res) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 8192, temperature: 0.8 },
+          generationConfig: {
+            maxOutputTokens: 8192,
+            temperature: 0.7,
+            responseMimeType: "application/json",
+          },
         }),
       }
     );
 
     const data = await response.json();
+    console.log("Gemini response:", JSON.stringify(data).slice(0, 300));
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     res.json({ content: [{ type: "text", text }] });
   } catch (err) {
