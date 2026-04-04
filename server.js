@@ -20,9 +20,8 @@ app.post("/api/generate", async (req, res) => {
   const prompt = `${system}\n\n${userMessage}\n\n重要：你的回答必須是純 JSON，不能有任何說明文字、不能有 markdown 的反引號，直接從 { 開始到 } 結束。`;
 
   try {
-    // 💡 這裡已經幫你把模型換成目前免費額度最穩定的 gemini-1.5-flash 了！
-    // 並且確保網址是一整行，沒有斷行符號
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 💡 確保這行沒有換行符號，並且使用最新的 gemini-2.5-flash 模型
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(apiUrl, {
       method: "POST",
@@ -32,7 +31,7 @@ app.post("/api/generate", async (req, res) => {
         generationConfig: {
           maxOutputTokens: 8192,
           temperature: 0.7,
-          responseMimeType: "application/json", // 強制回傳 JSON 格式
+          responseMimeType: "application/json", // 強制模型回傳標準 JSON 格式
         },
       }),
     });
@@ -40,7 +39,7 @@ app.post("/api/generate", async (req, res) => {
     const data = await response.json();
     console.log("Gemini response:", JSON.stringify(data).slice(0, 300));
 
-    // 💡 攔截錯誤：如果 API 回傳 4xx 或 5xx 錯誤，會把真實原因傳給前端顯示
+    // 💡 完整的錯誤攔截機制：如果模型發生錯誤（配額不足、找不到模型等），會把真實原因丟給前端
     if (!response.ok) {
       console.error("Gemini API Error details:", data);
       return res.status(response.status).json({ 
@@ -50,7 +49,7 @@ app.post("/api/generate", async (req, res) => {
 
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // 確保有拿到文字才回傳
+    // 💡 確保有拿到文字才回傳
     if (!text) {
       return res.status(500).json({ error: "AI 回傳了空白內容，請重試" });
     }
