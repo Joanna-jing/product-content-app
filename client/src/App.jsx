@@ -58,9 +58,9 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 2000,
-          system: systemPrompt,
+model: "claude-sonnet-4-20250514",
+system: systemPrompt,
+
           messages: [{ role: "user", content: userMessage }],
         }),
       });
