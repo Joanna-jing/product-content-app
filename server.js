@@ -27,7 +27,7 @@ app.post("/api/generate", async (req, res) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 2000, temperature: 0.8 },
+          generationConfig: { maxOutputTokens: 8192, temperature: 0.8 },
         }),
       }
     );
