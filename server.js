@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require("express"); // 💡 確保這裡是小寫的 const
 const cors = require("cors");
 const fetch = require("node-fetch");
 const path = require("path");
@@ -20,8 +20,8 @@ app.post("/api/generate", async (req, res) => {
   const prompt = `${system}\n\n${userMessage}\n\n重要：你的回答必須是純 JSON，不能有任何說明文字、不能有 markdown 的反引號，直接從 { 開始到 } 結束。`;
 
   try {
-    // 💡 確保這行沒有換行符號，並且使用最新的 gemini-2.5-flash 模型
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    // 💡 使用目前最穩定、額度充足的 1.5-flash-latest 模型
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
     const response = await fetch(apiUrl, {
       method: "POST",
@@ -31,7 +31,7 @@ app.post("/api/generate", async (req, res) => {
         generationConfig: {
           maxOutputTokens: 8192,
           temperature: 0.7,
-          responseMimeType: "application/json", // 強制模型回傳標準 JSON 格式
+          responseMimeType: "application/json",
         },
       }),
     });
@@ -39,7 +39,6 @@ app.post("/api/generate", async (req, res) => {
     const data = await response.json();
     console.log("Gemini response:", JSON.stringify(data).slice(0, 300));
 
-    // 💡 完整的錯誤攔截機制：如果模型發生錯誤（配額不足、找不到模型等），會把真實原因丟給前端
     if (!response.ok) {
       console.error("Gemini API Error details:", data);
       return res.status(response.status).json({ 
@@ -49,7 +48,6 @@ app.post("/api/generate", async (req, res) => {
 
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // 💡 確保有拿到文字才回傳
     if (!text) {
       return res.status(500).json({ error: "AI 回傳了空白內容，請重試" });
     }
